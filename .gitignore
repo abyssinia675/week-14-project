@@ -1,0 +1,7 @@
+apps/*/node_modules/
+dist/
+.DS_Store
+.env
+coverage/
+apps/backend/prisma/generated/
+apps/backend/dev.db
