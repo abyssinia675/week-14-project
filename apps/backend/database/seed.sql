@@ -1,11 +1,13 @@
 INSERT INTO categories (name)
 VALUES
-  ('Frontend'),
-  ('Backend'),
-  ('Database');
+  ('Applied'),
+  ('Interview Scheduled'),
+  ('Final Round'),
+  ('Offer');
 
 INSERT INTO items (name, description, category_id)
 VALUES
-  ('Build a React page', 'Create a component that fetches data from the Express API.', 1),
-  ('Create an Express route', 'Add a REST endpoint that returns JSON from PostgreSQL.', 2),
-  ('Design a table', 'Practice creating related tables with primary and foreign keys.', 3);
+  ('Software Engineer Intern - Shopify', 'Application submitted through the careers portal. Waiting for recruiter response.', 1),
+  ('Frontend Developer - Figma', 'Recruiter screen completed. Technical interview scheduled for next Tuesday.', 2),
+  ('Product Analyst - Notion', 'Completed take-home assignment and preparing for final panel interview.', 3),
+  ('UX Research Assistant - Duolingo', 'Received a verbal offer and waiting for the written details.', 4);

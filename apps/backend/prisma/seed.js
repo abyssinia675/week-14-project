@@ -7,10 +7,11 @@ async function main() {
 
   const categories = await prisma.category.createMany({
     data: [
-      { name: "Frontend" },
-      { name: "Backend" },
-      { name: "Database" }
-    ]
+      { name: "Applied" },
+      { name: "Interview Scheduled" },
+      { name: "Final Round" },
+      { name: "Offer" },
+    ],
   });
 
   if (categories.count === 0) {
@@ -18,27 +19,36 @@ async function main() {
   }
 
   const savedCategories = await prisma.category.findMany({
-    orderBy: { id: "asc" }
+    orderBy: { id: "asc" },
   });
 
   await prisma.item.createMany({
     data: [
       {
-        name: "Build a React page",
-        description: "Create a component that fetches data from the Express API.",
-        categoryId: savedCategories[0].id
+        name: "Software Engineer Intern - Shopify",
+        description:
+          "Application submitted through the careers portal. Waiting for recruiter response.",
+        categoryId: savedCategories[0].id,
       },
       {
-        name: "Create an Express route",
-        description: "Add a REST endpoint that returns JSON from PostgreSQL.",
-        categoryId: savedCategories[1].id
+        name: "Frontend Developer - Figma",
+        description:
+          "Recruiter screen completed. Technical interview scheduled for next Tuesday.",
+        categoryId: savedCategories[1].id,
       },
       {
-        name: "Design a table",
-        description: "Practice creating related tables with primary and foreign keys.",
-        categoryId: savedCategories[2].id
-      }
-    ]
+        name: "Product Analyst - Notion",
+        description:
+          "Completed take-home assignment and preparing for final panel interview.",
+        categoryId: savedCategories[2].id,
+      },
+      {
+        name: "UX Research Assistant - Duolingo",
+        description:
+          "Received a verbal offer and waiting for the written details.",
+        categoryId: savedCategories[3].id,
+      },
+    ],
   });
 }
 

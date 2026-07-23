@@ -1,6 +1,28 @@
-# Full Stack Application Template
+# Job Application Tracker
 
-This repository is a student-friendly starter template for a full stack application using:
+A full-stack CRUD application for tracking job applications by application stage.
+
+## Problem Statement
+
+Students and early-career job seekers often juggle dozens of applications across different companies and interview stages. This app provides one place to create, view, update, delete, search, and filter application records.
+
+## Target User
+
+Students, recent graduates, and career changers who need a simple job search tracker.
+
+## Features
+
+- Full CRUD for job applications.
+- View all applications and one individual application.
+- Search by keyword (name/description).
+- Filter by application stage.
+- Sort by newest, oldest, A-Z, and Z-A.
+- Application stage totals dashboard.
+- Frontend loading, empty, and error states.
+- Frontend and backend validation.
+- Confirmation before delete.
+
+## Technology
 
 - React
 - Vite
@@ -8,84 +30,145 @@ This repository is a student-friendly starter template for a full stack applicat
 - Node.js
 - Express
 - PostgreSQL
-- Prisma ORM
-- REST API endpoints
+- Prisma ORM with `@prisma/adapter-pg`
 - Docker Compose
-- Git and GitHub
-- Environment variables with `.env`
 
-## Project structure
+## Project Proposal (Required Planning Document #1)
 
-```text
-.
-├── README.md
-├── .gitignore
-├── docker-compose.yml
-└── apps/
-    ├── frontend/
-    │   ├── package.json
-    │   ├── index.html
-    │   ├── vite.config.js
-    │   └── src/
-    │       ├── App.jsx
-    │       ├── main.jsx
-    │       ├── styles.css
-    │       ├── api/
-    │       │   └── items.js
-    │       └── components/
-    │           └── ItemList.jsx
-    └── backend/
-        ├── package.json
-        ├── .env.example
-        ├── prisma.config.ts
-        ├── prisma/
-        │   ├── schema.prisma
-        │   ├── migrations/
-        │   └── seed.js
-        ├── database/
-        │   ├── schema.sql
-        │   └── seed.sql
-        └── server/
-            ├── db/
-            │   └── prisma.js
-            ├── controllers/
-            │   └── itemController.js
-            ├── routes/
-            │   └── items.js
-            └── server.js
-```
+- What is the application?
+  This is a job application tracking tool.
+- What problem does it solve?
+  It keeps job search activity organized across multiple companies and stages.
+- Who is the target user?
+  Students and job seekers managing ongoing applications.
+- What is the main resource?
+  `items`
+- What CRUD actions are supported?
+  Create application, read all/one application, update application, delete application.
+- What are the two related tables?
+  `categories` and `items`
 
+## Database Design (Required Planning Document #2)
 
-
-## Example application
-
-This template uses two related tables:
+### Tables
 
 - `categories`
+  Represents application stages such as Applied, Interview Scheduled, Final Round, and Offer.
 - `items`
+  Represents each tracked job application record.
 
-The `items` table has a foreign key to `categories`, which gives students a simple example of relational database design.
+### Relationship
 
-In Prisma code, the models are named `Category` and `Item`, but the actual PostgreSQL tables are lowercase: `categories` and `items`.
+- One category has many items.
+- `items.category_id` is a foreign key to `categories.id`.
 
-## Requirements
+### Why these columns and types?
 
-Before starting, make sure you have these installed:
+- `id SERIAL`: simple auto-incrementing primary keys.
+- `name VARCHAR(100)`: short required names.
+- `description TEXT`: flexible longer notes.
+- `created_at TIMESTAMP`: supports date sorting and timeline visibility.
 
-- Node.js
-- npm
-- Docker Desktop
-- PostgreSQL client tools if you want to use `psql` commands directly
+### ER Diagram
 
+```mermaid
+erDiagram
+  CATEGORIES ||--o{ ITEMS : contains
 
+  CATEGORIES {
+    int id PK
+    string name
+    timestamp created_at
+  }
 
-## Environment variables
+  ITEMS {
+    int id PK
+    string name
+    text description
+    int category_id FK
+    timestamp created_at
+  }
+```
 
-All secret values should stay in a `.env` file.
+## API Plan (Required Planning Document #3)
 
-1. Go to `apps/backend`
-2. Copy `.env.example` to `.env`
-3. Update the values if needed
+| Method | Endpoint           | Purpose                                                  |
+| ------ | ------------------ | -------------------------------------------------------- |
+| GET    | `/api/health`      | Health check                                             |
+| GET    | `/api/categories`  | Get all categories                                       |
+| GET    | `/api/items`       | Get all items (supports search/filter/sort query params) |
+| GET    | `/api/items/:id`   | Get one item by id                                       |
+| POST   | `/api/items`       | Create an item                                           |
+| PUT    | `/api/items/:id`   | Update an item                                           |
+| DELETE | `/api/items/:id`   | Delete an item                                           |
+| GET    | `/api/items/stats` | Aggregated count of items by category                    |
+
+## Component Plan (Required Planning Document #4)
+
+```text
+App
+├── Navbar
+├── ItemForm
+├── SearchBar
+├── StatusMessage
+├── ItemList
+│   └── ItemCard
+└── CategoryStats
+```
+
+## Backend Response Shape
+
+Example success:
+
+```json
+{
+  "message": "Item created successfully",
+  "data": {
+    "id": 12,
+    "name": "USB-C Hub",
+    "description": "7-port adapter",
+    "categoryId": 1
+  }
+}
+```
+
+Example error:
+
+```json
+{
+  "message": "name, description, and a valid categoryId are required"
+}
+```
+
+## SQL Coverage
+
+This project demonstrates:
+
+- `CREATE TABLE`: [apps/backend/database/schema.sql](apps/backend/database/schema.sql)
+- `INSERT`: [apps/backend/database/seed.sql](apps/backend/database/seed.sql)
+- `SELECT`, `WHERE`, `ORDER BY`, `JOIN`: [apps/backend/server/controllers/itemController.js](apps/backend/server/controllers/itemController.js)
+- `UPDATE` and `DELETE`: Prisma queries in [apps/backend/server/controllers/itemController.js](apps/backend/server/controllers/itemController.js)
+- Explicit SQL examples for `SELECT`, `WHERE`, `ORDER BY`, `JOIN`, `UPDATE`, and `DELETE`: [apps/backend/database/query_examples.sql](apps/backend/database/query_examples.sql)
+
+Join example used by the API:
+
+```sql
+SELECT
+  items.id,
+  items.name,
+  items.description,
+  items.category_id,
+  items.created_at,
+  categories.name AS category_name
+FROM items
+JOIN categories ON items.category_id = categories.id
+WHERE items.id = $1
+LIMIT 1;
+```
+
+## Environment Variables
+
+Create [apps/backend/.env](apps/backend/.env) from [apps/backend/.env.example](apps/backend/.env.example).
 
 Example:
 
@@ -94,226 +177,133 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5433/backend-db?schema=pu
 PORT=3001
 ```
 
-The root `.gitignore` already includes `.env` so it will not be committed.
+`.env` is ignored by Git in [.gitignore](.gitignore).
 
-## How to create the PostgreSQL database
+## Installation and Local Development
 
-This project uses Docker Compose for PostgreSQL.
-
-From `apps/backend`, run:
-
-```bash
-npm run db:up
-```
-
-This starts the PostgreSQL container defined in the root `docker-compose.yml` file.
-
-Prisma 7 reads its CLI database configuration from `apps/backend/prisma.config.ts`.
-
-To stop the database:
+1. Clone the repository.
+2. Install backend dependencies:
 
 ```bash
-npm run db:down
-```
-
-To view database logs:
-
-```bash
-npm run db:logs
-```
-
-
-
-## Backend setup
-
-Open a terminal in `apps/backend` and run:
-
-```bash
+cd apps/backend
 npm install
+```
+
+3. Install frontend dependencies:
+
+```bash
+cd ../frontend
+npm install
+```
+
+4. Configure environment variables:
+
+```bash
+cd ../backend
 cp .env.example .env
+```
+
+5. Start PostgreSQL with Docker:
+
+```bash
 npm run db:up
+```
+
+6. Generate Prisma client and run migration:
+
+```bash
 npm run prisma:generate
 npm run prisma:migrate -- --name init
+```
+
+7. Seed data:
+
+```bash
 npm run db:seed
 ```
 
-Then start the backend:
+8. Start backend:
 
 ```bash
 npm run dev
 ```
 
-The backend will run at:
-
-```text
-http://localhost:3001
-```
-
-Available example REST API endpoints:
-
-- `GET /api/health`
-- `GET /api/categories`
-- `GET /api/items`
-- `POST /api/items`
-
-
-
-## Frontend setup
-
-Open a second terminal in `apps/frontend` and run:
+9. Start frontend (new terminal):
 
 ```bash
-npm install
+cd apps/frontend
 npm run dev
 ```
 
-The frontend will run at:
+## Manual Database Setup with SQL Files
 
-```text
-http://localhost:5173
-```
+If you prefer SQL files directly:
 
-
-
-## How to run `schema.sql`
-
-The raw SQL files are included in `apps/backend/database` for teaching and testing.
-
-Use this option on a fresh database if you want to set up the tables manually with SQL instead of using Prisma migrations.
-
-From `apps/backend`, after your `.env` is configured and PostgreSQL is running, run:
+1. Ensure PostgreSQL is running.
+2. Run schema:
 
 ```bash
+cd apps/backend
 npm run sql:schema
 ```
 
-This executes:
-
-```text
-database/schema.sql
-```
-
-
-
-## How to run `seed.sql`
-
-Run this after `schema.sql` if you are following the raw SQL setup path.
-
-From `apps/backend`, run:
+3. Run seed:
 
 ```bash
 npm run sql:seed
 ```
 
-This executes:
+## Validation Rules
 
-```text
-database/seed.sql
-```
+### Frontend
 
+- Required fields (`name`, `description`, `categoryId`).
+- Input minimum length on name and description.
 
+### Backend
 
-## Prisma workflow
+- Rejects missing/invalid fields with `400`.
+- Rejects invalid ids with `400`.
+- Returns `404` when an item does not exist.
 
-This template uses the current Prisma 7 setup:
+## HTTP Status Codes Used
 
-- `prisma.config.ts` configures Prisma CLI commands
-- `schema.prisma` defines the models
-- `@prisma/adapter-pg` connects Prisma Client to PostgreSQL at runtime
-- `prisma-client-js` keeps the generated client plain JavaScript-friendly for this class template
-- Prisma maps `Category` and `Item` to lowercase PostgreSQL tables so students can query `categories` and `items` directly in `psql`
+- `200` successful reads/updates/deletes
+- `201` successful create
+- `400` invalid request data
+- `404` record not found
+- `500` unexpected server errors
 
-Useful Prisma commands from `apps/backend`:
+## Testing Checklist
 
-```bash
-npm run prisma:generate
-npm run prisma:migrate -- --name init
-npm run prisma:studio
-npm run db:seed
-npm run db:reset
-```
+- Create item from form.
+- View all items.
+- View one item endpoint.
+- Update an item.
+- Delete an item (with confirmation).
+- Search/filter/sort via backend query params.
+- Verify loading/error/empty states in frontend.
 
+## Presentation Talking Points
 
+- Problem and target user.
+- Live CRUD walkthrough.
+- Explain table relationship and foreign key.
+- Demonstrate SQL join endpoint.
+- Technical challenge: syncing UI state after edit/delete while preserving filters.
 
-### When you want to change the database schema
+## AI Reflection (Required)
 
-Do not create the migration file by hand first.
+Use this section before submission:
 
-#### Instead:
+1. How did you use AI?
+2. What did AI help you understand?
+3. What incorrect or incomplete AI response did you encounter?
+4. How did you test AI-generated code?
+5. What part of the project can you explain without AI assistance?
 
-- Edit `apps/backend/prisma/schema.prisma`
+## Repository Requirements Reminder
 
-Run:
-
-- `npm run prisma:migrate -- --name describe-your-change`
-
-Prisma will:
-
-- compare the current schema to the last migration
-- generate the new migration SQL file for you
-- apply it to your local database
-
-Example:
-
-- If you add a new column or model:
-- `npm run prisma:migrate -- --name add-user-table`
-
-
-
-## Helpful backend scripts
-
-From `apps/backend`:
-
-```bash
-npm run dev
-npm run start
-npm run db:up
-npm run db:down
-npm run db:logs
-npm run db:psql
-npm run prisma:generate
-npm run prisma:migrate -- --name init
-npm run prisma:deploy
-npm run prisma:studio
-npm run db:seed
-npm run db:reset
-npm run sql:schema
-npm run sql:seed
-```
-
-`db:psql` requires PostgreSQL client tools to be installed on your machine.
-
-## Git and GitHub workflow
-
-Suggested student workflow:
-
-1. Create a new GitHub repository from this template.
-2. Clone the repository.
-3. Create a new branch for your work.
-4. Commit your changes regularly.
-5. Push your branch to GitHub.
-
-
-
-## Suggested startup order
-
-1. In `apps/backend`, run `npm install`.
-2. In `apps/frontend`, run `npm install`.
-3. In `apps/backend`, copy `.env.example` to `.env`.
-4. In `apps/backend`, run `npm run db:up`.
-5. In `apps/backend`, run `npm run prisma:generate`.
-6. In `apps/backend`, run `npm run prisma:migrate -- --name init`.
-7. In `apps/backend`, run `npm run db:seed`.
-8. In `apps/backend`, run `npm run dev`.
-9. In `apps/frontend`, run `npm run dev`.
-
-
-
-## Notes for students
-
-- Keep your backend code inside `apps/backend`.
-- Keep your frontend code inside `apps/frontend`.
-- Keep secrets in `.env` files only.
-- Use Prisma models to represent your database tables.
-- Use REST routes in Express to connect the frontend to PostgreSQL.
-
+- Commit regularly with meaningful messages.
+- Do not commit `node_modules`, `.env`, passwords, or API keys.
+- Include schema, seed, `.env.example`, and README.

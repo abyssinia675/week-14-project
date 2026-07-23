@@ -1,18 +1,27 @@
-export default function ItemList({ items }) {
+import ItemCard from "./ItemCard.jsx";
+
+export default function ItemList({
+  items,
+  bookmarkedIds,
+  onEdit,
+  onDelete,
+  onToggleBookmark,
+}) {
   if (items.length === 0) {
-    return <p>No items yet.</p>;
+    return <p>No applications match this filter yet.</p>;
   }
 
   return (
     <ul className="item-list">
       {items.map((item) => (
-        <li key={item.id} className="item-card">
-          <div className="item-card__header">
-            <h3>{item.name}</h3>
-            <span>{item.category.name}</span>
-          </div>
-          <p>{item.description}</p>
-        </li>
+        <ItemCard
+          key={item.id}
+          item={item}
+          isBookmarked={bookmarkedIds.includes(item.id)}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onToggleBookmark={onToggleBookmark}
+        />
       ))}
     </ul>
   );
